@@ -1,0 +1,113 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { SearchResult } from '@/types';
+import { Star, GitFork, ExternalLink, Heart, Eye, Code } from 'lucide-react';
+
+interface RepoCardProps {
+  result: SearchResult;
+  index: number;
+}
+
+export const RepoCard: React.FC<RepoCardProps> = ({ result, index }) => {
+  const { user, addBookmark, removeBookmark } = useAuth();
+  const isBookmarked = user?.bookmarks.includes(result.id) || false;
+
+  const handleBookmark = () => {
+    if (isBookmarked) {
+      removeBookmark(result.id);
+    } else {
+      addBookmark(result.id);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      whileHover={{ y: -4 }}
+    >
+      <Card className="h-full hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <Code className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg leading-tight hover:text-blue-600 transition-colors">
+                  {result.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  by {result.metadata.author}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBookmark}
+              className="h-8 w-8 p-0"
+            >
+              <Heart className={`h-4 w-4 ${isBookmarked ? 'fill-red-500 text-red-500' : ''}`} />
+            </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {result.description}
+          </p>
+
+          {result.aiSummary && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                <span className="font-medium">AI Summary:</span> {result.aiSummary}
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+            {result.metadata.stars && (
+              <div className="flex items-center space-x-1">
+                <Star className="h-4 w-4" />
+                <span>{result.metadata.stars.toLocaleString()}</span>
+              </div>
+            )}
+            {result.metadata.language && (
+              <div className="flex items-center space-x-1">
+                <div className="h-3 w-3 rounded-full bg-yellow-500" />
+                <span>{result.metadata.language}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {result.metadata.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+              onClick={() => window.open(result.url, '_blank')}
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>View Repository</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
